@@ -45,12 +45,34 @@ class LatAnimeProvider : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val urls = listOf(
-                Pair("$mainUrl/emision", "En emisión"),
+                Pair("$mainUrl/emision", "Novedades"),
+                Pair("$mainUrl/animes", "Anime"),
+                Pair("$mainUrl/buscar?q=Castellano", "Anime Castellano"),
+                Pair("$mainUrl/buscar?q=Latino", "Anime Latino"),
                 Pair(
-                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=Película",
-                        "Peliculas"
+                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=Película+Castellano",
+                        "Peliculas Castellano"
                 ),
-                Pair("$mainUrl/animes", "Animes"),
+                Pair(
+                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=Película+Latino",
+                        "Peliculas Latino"
+                ),
+                Pair(
+                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=castellano",
+                        "Series Castellano"
+                ),
+                Pair(
+                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=latino",
+                        "Series Latino"
+                ),
+                Pair(
+                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=ova",
+                        "OVA"
+                ),
+                Pair(
+                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=sin-censura",
+                        "Sin Censura"
+                ),
         )
 
         val items = ArrayList<HomePageList>()
