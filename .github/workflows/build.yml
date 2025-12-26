@@ -30,7 +30,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: saschpe/android-sdk:35-jdk17.0.14_7
+    # container: saschpe/android-sdk:35-jdk17.0.14_7
     steps:
 
       - name: Checkout
@@ -48,14 +48,14 @@ jobs:
         run: |
           rm $GITHUB_WORKSPACE/builds/*.cs3 || true
 
-      # - name: Setup JDK 17
-      #   uses: actions/setup-java@v4.6.0
-      #   with:
-      #     distribution: "adopt"
-      #     java-version: 17
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4.6.0
+        with:
+          distribution: "adopt"
+          java-version: 17
 
-      # - name: Setup Android SDK
-      #   uses: android-actions/setup-android@v3.2.2
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3.2.2
 
       - name: "🔧 Prepare debug session"
         if: github.event.inputs.debug_enabled == 'true'
