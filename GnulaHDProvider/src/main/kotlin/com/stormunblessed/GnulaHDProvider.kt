@@ -10,7 +10,7 @@ import com.lagradost.cloudstream3.utils.loadExtractor
 import java.util.*
 
 
-class LatAnimeProvider : MainAPI() {
+class GnulaHDProvider : MainAPI() {
     companion object {
         fun getType(t: String): TvType {
             return if (t.contains("OVA") || t.contains("Especial")) TvType.OVA
@@ -25,15 +25,15 @@ class LatAnimeProvider : MainAPI() {
         }
     }
 
-    override var mainUrl = "https://latanime.org"
-    override var name = "LatAnime"
-    override var lang = "mx"
+    override var mainUrl = "https://ww3.GnulaHD.nu"
+    override var name = "GnulaHD"
+    override var lang = "es"
     override val hasMainPage = true
     override val hasChromecastSupport = true
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(
-            TvType.AnimeMovie,
-            TvType.OVA,
+            TvType.Movie,
+            TvType.TvSeries,
             TvType.Anime,
     )
 
@@ -45,34 +45,12 @@ class LatAnimeProvider : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val urls = listOf(
-                Pair("$mainUrl/emision", "Novedades"),
-                Pair("$mainUrl/animes", "Anime"),
-                Pair("$mainUrl/buscar?q=Castellano", "Anime Castellano"),
-                Pair("$mainUrl/buscar?q=Latino", "Anime Latino"),
-                Pair(
-                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=Película+Castellano",
-                        "Peliculas Castellano"
-                ),
-                Pair(
-                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=Película+Latino",
-                        "Peliculas Latino"
-                ),
-                Pair(
-                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=castellano",
-                        "Series Castellano"
-                ),
-                Pair(
-                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=latino",
-                        "Series Latino"
-                ),
-                Pair(
-                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=ova",
-                        "OVA"
-                ),
-                Pair(
-                        "$mainUrl/animes?fecha=false&genero=false&letra=false&categoria=sin-censura",
-                        "Sin Censura"
-                ),
+            Pair("$mainUrl/ver/?type=Pelicula", "Peliculas"),
+            Pair("$mainUrl/ver/?type=Serie", "Series"),
+            Pair("$mainUrl/ver/?type=Anime", "Anime"),
+            Pair("$mainUrl/ver/?type=Pelicula&order=latest", "Novedades Peliculas"),
+            Pair("$mainUrl-ver/?status=&type=Serie&order=latest", "Novedades Series"),
+            Pair("$mainUrl-ver/?status=&type=Anime&order=latest", "Novedades Anime"),
         )
 
         val items = ArrayList<HomePageList>()
@@ -100,15 +78,12 @@ class LatAnimeProvider : MainAPI() {
 //        )
 
         urls.amap { (url, name) ->
-            val home = appGetChildMainUrl(url).document.select("html body div.container div.row div.col-md-4.col-lg-3.col-xl-2.col-6.my-3").map {
-                val title = it.selectFirst("div.col-md-4.col-lg-3.col-xl-2.col-6.my-3 a div.series div.seriedetails h3.my-1")!!.text()
-                val imgElement = it.selectFirst("div.col-md-4.col-lg-3.col-xl-2.col-6.my-3 a div.series div.serieimg.shadown img.img-fluid2.shadow-sm")
-                val poster =
-                        if(imgElement?.attr("data-src")?.isEmpty() == false)
-                            imgElement.attr("data-src") else
-                                imgElement?.attr("src") ?: ""
+            val home = appGetChildMainUrl(url).document.select("article.bs").map {
+                val title = it.selectFirst("a")!!.attr("title")
+                val imgElement = it.selectFirst("a div.limit img")
+                val poster = imgElement?.attr("src") ?: ""
 
-                newAnimeSearchResponse(title, fixUrl(it.selectFirst("a")!!.attr("href"))) {
+                newAnimeSearchResponse(title, fixUrl(it.selectFirst("a")!!.attr("href").replace("/ver/", "/"))) {
                     this.posterUrl = fixUrl(poster)
                     addDubStatus(getDubStatus(title))
                     this.posterHeaders = if (poster.contains(mainUrl)) cloudflareKiller.getCookieHeaders(mainUrl).toMap() else emptyMap<String, String>()
@@ -123,10 +98,10 @@ class LatAnimeProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        return appGetChildMainUrl("$mainUrl/buscar?q=$query").document.select("html body div.container div.row div.col-md-4.col-lg-3.col-xl-2.col-6.my-3").map {
-            val title = it.selectFirst("a div.series div.seriedetails h3.my-1")!!.text()
-            val href = fixUrl(it.selectFirst("a")!!.attr("href"))
-            val image = it.selectFirst("a div.series div.serieimg.shadown img.img-fluid2.shadow-sm")!!.attr("src")
+        return appGetChildMainUrl("$mainUrl/?s=$query").document.select("article.bs").map {
+            val title = it.selectFirst("a")!!.attr("title")
+            val href = fixUrl(it.selectFirst("a")!!.attr("href").replace("/ver/", "/"))
+            val image = it.selectFirst("a div.limit img")!!.attr("src")
             newAnimeSearchResponse(title, href, TvType.Anime){
                 this.posterUrl = fixUrl(image)
                 this.dubStatus = if (title.contains("Latino") || title.contains("Castellano")) EnumSet.of(
@@ -202,7 +177,7 @@ class LatAnimeProvider : MainAPI() {
         appGetChildMainUrl(data).document.select("li#play-video").amap {
             val encodedurl = it.select("a").attr("data-player")
             val urlDecoded = base64Decode(encodedurl)
-            Log.d("debugiando", "urlDecoded: $urlDecoded")
+            Log.d("depurando", "urlDecoded: $urlDecoded")
             val url = (urlDecoded)
                 .replace("https://monoschinos2.com/reproductor?url=", "")
                 .replace("https://mojon.latanime.org/aqua/fn?url=", "")
